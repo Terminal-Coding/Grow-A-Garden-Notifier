@@ -1,27 +1,34 @@
 import threading
 import colorsys
 import customtkinter as ctk
-from plyer import notification
+from winotify import Notification
+import pygame
 import time
-import pygame  # Import pygame for audio handling
+import os
+import sys
 
-NOTIFY_INTERVAL = 5  # 5 minutes
+NOTIFY_INTERVAL = 300  # 5 minutes
 
-# Initialize pygame mixer for sound
-pygame.mixer.init()
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
+def play_sound():
+    try:
+        pygame.mixer.init()
+        pygame.mixer.music.load(resource_path("notify.wav"))
+        pygame.mixer.music.play()
+    except Exception as e:
+        print("Audio Error:", e)
 
 def send_notification():
-    # Play the notification sound
-    pygame.mixer.music.load("notify.wav")  # Make sure 'notify.wav' is in the correct directory
-    pygame.mixer.music.play()
-
-    # Send system notification
-    notification.notify(
-        title='GROW A GARDEN',
-        message='SHOP HAS RESET',
-        timeout=5
-    )
-
+    play_sound()
+    toast = Notification(app_id="Grow-A-Garden",
+                         title="GROW A GARDEN",
+                         msg="SHOP HAS RESET",
+                         duration="short")
+    toast.show()
 class NotificationApp:
     def __init__(self, root):
         self.root = root
@@ -40,7 +47,7 @@ class NotificationApp:
         )
         self.rainbow_label.pack(pady=(15, 5))
 
-        # Countdown label (initially hidden)
+        # Countdown label
         self.label = ctk.CTkLabel(
             root,
             text="05:00",
@@ -96,7 +103,6 @@ class NotificationApp:
                 send_notification()
 
         threading.Thread(target=loop_notifications, daemon=True).start()
-
 
 if __name__ == "__main__":
     app = ctk.CTk()
